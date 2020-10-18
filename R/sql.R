@@ -171,16 +171,22 @@
     info <- .sql_connect_RW(.sql_dbfile(bfc))
     on.exit(if (!is.null(info)) { .sql_disconnect(info) })
 
-    rpath <- rep(path.expand(tempfile("", bfccache(bfc))), length(fpath))
-    rtype <- unname(rtype)
+    no_fpath <- is.na(fpath)
+    bfname <- fpath
+    bfname[no_fpath] <- ""
+    bfname[!no_fpath] <- sprintf("_%s", curl_escape(basename(bfname[!no_fpath])))
+
+    no_ext <- is.na(ext)
+    ext[no_ext] <- ""
+    ext[!no_ext] <- sprintf(".%s", ext[!no_ext])
+
+    rpath <- tempfile("", bfccache(bfc), sprintf("%s%s", bfname, ext))
+    rpath <- unname(path.expand(rpath))
+    lapply(rpath, write, x=character(0)) # touching to guarantee existence for later tempfile() calls.
+
     dx <- rtype == "relative" | rtype == "web"
     rpath[dx] <- basename(rpath[dx])
-
-    fpath[is.na(fpath)] <- rpath[is.na(fpath)]
-    ext[is.na(ext)] <- ""
-    bfname <- basename(fpath)
-    bfname <- curl_escape(bfname)
-    rpath <- sprintf("%s_%s%s", rpath, bfname, ext)
+    fpath[no_fpath] <- rpath[no_fpath]
 
     sql <- strsplit(.sql_cmd("-- INSERT"), ";")[[1]]
     con <- info$con

@@ -1291,9 +1291,8 @@ setMethod("exportbfc", "BiocFileCacheBase",
             orig <- .sql_get_rpath(x, i)
             newpath <- file.path(dir, basename(orig))
             if (file.exists(newpath)) {
-                filename <- paste(basename(tempfile("", bfccache(newbfc))),
-                              basename(orig), sep="_")
-                newpath <- file.path(dir, filename)
+                newpath <- tempfile("", bfccache(newbfc), 
+                    fileext=paste0("_", basename(orig)))
             }
             file.copy(orig, newpath)
         }
